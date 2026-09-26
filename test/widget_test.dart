@@ -1,30 +1,40 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:flutter_flavors_lab/config/app_config.dart';
 import 'package:flutter_flavors_lab/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Development flavor displays correct configuration', (
+    WidgetTester tester,
+  ) async {
+    const devConfig = AppConfig(
+      environment: 'development',
+      apiUrl: 'https://dev-api.example.com',
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(const MyApp(config: devConfig));
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    expect(find.text('Flutter Flavors Lab'), findsOneWidget);
+    expect(find.text('CURRENT ENVIRONMENT'), findsOneWidget);
+    expect(find.text('DEVELOPMENT'), findsOneWidget);
+    expect(find.text('https://dev-api.example.com'), findsOneWidget);
+    expect(find.text('com.example.flutter_flavors_lab.dev'), findsOneWidget);
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('Production flavor displays correct configuration', (
+    WidgetTester tester,
+  ) async {
+    const prodConfig = AppConfig(
+      environment: 'production',
+      apiUrl: 'https://api.example.com',
+    );
+
+    await tester.pumpWidget(const MyApp(config: prodConfig));
+
+    expect(find.text('Flutter Flavors Lab'), findsOneWidget);
+    expect(find.text('CURRENT ENVIRONMENT'), findsOneWidget);
+    expect(find.text('PRODUCTION'), findsOneWidget);
+    expect(find.text('https://api.example.com'), findsOneWidget);
+    expect(find.text('com.example.flutter_flavors_lab'), findsOneWidget);
   });
 }

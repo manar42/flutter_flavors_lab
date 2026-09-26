@@ -1,144 +1,173 @@
 # Flutter Flavors Lab
 
-A practical Flutter project demonstrating how to manage multiple environments from a single codebase using **Flutter Flavors**.
+A practical Flutter lab demonstrating how to configure and run multiple environments from a single codebase using **Flutter Flavors**, `--dart-define`, and separate entry points.
 
-## Features
+---
 
-* Development & Production flavors
-* Different app names for each flavor
-* Different Application IDs
-* Environment-specific configuration
-* Multiple Flutter entry points
-* `--dart-define` environment variables
-* VS Code launch configurations
-* Development & Production APK builds
+## What is Flutter Flavors?
+
+Flutter Flavors allow developers to create multiple variants of the same application (such as Development, Staging, or Production) from a single shared codebase. Each flavor can have its own:
+
+* **Application ID / Package Name** (allowing side-by-side installations on the same device)
+* **Application Name** (e.g., *Flavors Lab Development* vs *Flavors Lab Production*)
+* **Environment Configurations & Base URLs** (e.g., dev API vs production API)
+* **Build Settings & Icons**
+
+---
+
+## Environments
+
+| Environment | Status | Description |
+| :--- | :--- | :--- |
+| **Development** | **Implemented** | Local development, rapid iteration, `.dev` ID suffix |
+| **Production** | **Implemented** | Production-ready configuration, base Application ID |
+| *Staging* | *Concept / Extension* | Architectural concept for pre-release QA (not configured as an Android flavor in this lab) |
+
+---
+
+## What is Implemented?
+
+* **Android Product Flavors** configured in `build.gradle.kts` (`development` and `production`).
+* **Distinct Application IDs** using `applicationIdSuffix = ".dev"` for development.
+* **Distinct App Names** dynamically populated via Android `resValue("string", "app_name", ...)`.
+* **Compile-time Variables** passed with `--dart-define=ENV=...` and accessed via `String.fromEnvironment('ENV')`.
+* **Centralized Configuration Model** using `AppConfig` (holds `environment` and `apiUrl`).
+* **Dedicated Entry Points** (`main_development.dart` and `main_production.dart`).
+* **Visual Dashboard Demo UI** built with Material 3 that dynamically reflects the active environment, API URL, and flavor.
+* **Pre-configured VS Code Launch Profiles** in `.vscode/launch.json`.
+* **Verified APK Builds** for both flavors.
+
+---
 
 ## Project Structure
 
 ```text
 lib/
 ├── config/
-│   └── app_config.dart
-├── main.dart
-├── main_development.dart
-└── main_production.dart
+│   └── app_config.dart          # Configuration model (environment, apiUrl)
+├── main.dart                    # Shared app UI & dashboard screen
+├── main_development.dart       # Development entry point
+└── main_production.dart        # Production entry point
 
 android/
 └── app/
-    ├── build.gradle.kts
+    ├── build.gradle.kts         # Product flavors & applicationIdSuffix definition
     └── src/
         └── main/
-            └── AndroidManifest.xml
+            └── AndroidManifest.xml # Uses @string/app_name
 
 .vscode/
-└── launch.json
+└── launch.json                  # VS Code Run & Debug configurations
 ```
 
-## Flavors
+---
 
-### Development
+## Flavor Comparison
 
-* Flavor: `development`
-* Environment: `development`
-* App Name: `Flavors Lab Development`
-* Application ID: `<base-id>.dev`
+| Feature | Development | Production |
+| :--- | :--- | :--- |
+| **Flavor Name** | `development` | `production` |
+| **Entry Point** | `lib/main_development.dart` | `lib/main_production.dart` |
+| **App Name** | `Flavors Lab Development` | `Flavors Lab Production` |
+| **Application ID** | `com.example.flutter_flavors_lab.dev` | `com.example.flutter_flavors_lab` |
+| **`--dart-define`** | `ENV=development` | `ENV=production` |
+| **API URL** | `https://dev-api.example.com` | `https://api.example.com` |
 
-### Production
+Because each flavor has a distinct Application ID, both applications can be installed and tested simultaneously on the same Android device without overwriting each other.
 
-* Flavor: `production`
-* Environment: `production`
-* App Name: `Flavors Lab Production`
-* Application ID: `<base-id>`
+---
 
-The different Application IDs allow both versions to be installed on the same Android device.
+## Demo App UI
 
-## Environment Configuration
+The demo application contains a unified screen that proves flavor separation without differing UI codebases:
 
-The project uses a shared `AppConfig` to provide environment-specific values while keeping the application code shared.
-
-Example:
-
-```dart
-const config = AppConfig(
-  environment: 'development',
-  apiUrl: 'https://dev-api.example.com',
-);
+```text
+┌──────────────────────────────────────────────┐
+│             Flutter Flavors Lab              │
+│                                              │
+│             CURRENT ENVIRONMENT              │
+│                [DEVELOPMENT]                 │
+│                                              │
+│  Environment                                 │
+│  development                                 │
+│                                              │
+│  API URL                                     │
+│  https://dev-api.example.com                 │
+│                                              │
+│  Flavor                                      │
+│  development                                 │
+│                                              │
+│  Application ID                              │
+│  com.example.flutter_flavors_lab.dev         │
+└──────────────────────────────────────────────┘
 ```
 
-The Production entry point provides its own configuration.
+When launched with the production configuration, the card automatically updates to display `PRODUCTION`, `https://api.example.com`, and `com.example.flutter_flavors_lab`.
 
-## `--dart-define`
+---
 
-Environment values can be passed at runtime/build time using `--dart-define`.
+## Screenshots
 
-### Development
+| Development Flavor | Production Flavor |
+| :---: | :---: |
+| <img src="assets/images/dev.JPG" width="340" alt="Development Flavor Screenshot" /> | <img src="assets/images/pro.JPG" width="340" alt="Production Flavor Screenshot" /> |
 
+---
+
+## How to Run
+
+### Option 1: VS Code Run & Debug
+Select either **Development** or **Production** from the Run & Debug drop-down menu and press `F5`.
+
+### Option 2: Terminal Commands
+
+#### Run Development:
 ```bash
-flutter run --flavor development --dart-define=ENV=development
+flutter run -t lib/main_development.dart --flavor development --dart-define=ENV=development
 ```
 
-### Production
-
+#### Run Production:
 ```bash
-flutter run --flavor production --dart-define=ENV=production
+flutter run -t lib/main_production.dart --flavor production --dart-define=ENV=production
 ```
 
-The value is accessed in Dart using:
+*(Note: If you run without `-t`, `lib/main.dart` also provides a fallback that detects `--dart-define=ENV=...`)*
 
-```dart
-const environment = String.fromEnvironment('ENV');
-```
+---
 
-## VS Code
+## How to Build APK
 
-The project includes `.vscode/launch.json` with separate configurations for:
-
-* Development
-* Production
-
-This allows each flavor to be launched directly from **Run and Debug** without entering the full command manually.
-
-## Build APK
-
-### Development
-
+#### Build Development APK:
 ```bash
 flutter build apk --flavor development --dart-define=ENV=development
 ```
+Output: `build/app/outputs/flutter-apk/app-development-release.apk`
 
-### Production
-
+#### Build Production APK:
 ```bash
 flutter build apk --flavor production --dart-define=ENV=production
 ```
+Output: `build/app/outputs/flutter-apk/app-production-release.apk`
+
+---
 
 ## Flavor vs Build Mode
 
-**Flavor** determines the application environment:
+It is essential to distinguish between **Flavors** and **Build Modes**:
 
-```text
-Development / Production
-```
+* **Flavor** defines *what environment* the app connects to and how it is branded (`development`, `production`).
+* **Build Mode** defines *how the compiler packages and optimizes* the binary (`debug`, `profile`, `release`).
 
-**Build Mode** determines how the application is built:
+They can be combined as needed:
+* `Development + Debug` (for rapid coding, hot reload, and local API testing)
+* `Development + Release` (for internal team testing on real devices)
+* `Production + Release` (for final deployment to end users)
 
-```text
-Debug / Profile / Release
-```
-
-They can be used together, for example:
-
-```text
-Development + Debug
-Production + Release
-```
+---
 
 ## Tech Stack
 
-* Flutter
-* Dart
-* Android Gradle
-* Kotlin DSL
-* VS Code
-* Flutter Flavors
-* `--dart-define`
+* **Flutter** (Material 3)
+* **Dart** (`String.fromEnvironment`)
+* **Android Gradle Plugin** with **Kotlin DSL** (`build.gradle.kts`)
+* **Zero external state management or backend dependencies** (pure Flutter SDK)
